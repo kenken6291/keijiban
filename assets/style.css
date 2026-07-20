@@ -1,0 +1,93 @@
+:root {
+  --color-primary: #2f6f4f;
+  --color-primary-dark: #234f38;
+  --color-bg: #f7f7f4;
+  --color-card: #ffffff;
+  --color-border: #ddd;
+  --color-text: #222;
+  --color-text-muted: #777;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.7;
+}
+
+header.site-header {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 16px 20px;
+}
+
+header.site-header .site-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #fff;
+}
+
+nav.site-nav {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+nav.site-nav a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+nav.site-nav a:hover { opacity: 1; text-decoration: underline; }
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.hero {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.hero h1 { margin-top: 0; font-size: 1.5rem; }
+.hero p { color: #444; }
+
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover { background: var(--color-primary-dark); }
+.btn-outline { background: #fff; color: var(--color-primary); border: 1px solid var(--color-primary); }
+.btn-outline:hover { background: #eef6ee; }
+
+.info-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.info-card h2 { font-size: 1.1rem; margin-top: 0; }
+
+footer.site-footer {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  padding: 20px;
+}

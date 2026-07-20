@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会員登録・ログイン | 地域交流イベント</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="site-title" href="index.html">地域交流イベント</a>
+  <nav class="site-nav">
+    <a href="index.html">ホーム</a>
+    <a href="account.html">会員登録・ログイン</a>
+    <a href="entry-form.html">予定を登録する</a>
+  </nav>
+</header>
+
+<main>
+<div id="accountApp" class="account-app">
+
+  <!-- ログイン中の表示 -->
+  <div id="loggedInBar" class="logged-in-bar" style="display:none;">
+    <span id="loggedInNickname"></span> さんとしてログイン中
+    <button type="button" id="logoutBtn">ログアウト</button>
+  </div>
+
+  <!-- 会員登録 / ログイン 切り替えタブ -->
+  <div id="authTabs" class="auth-tabs">
+    <button type="button" class="tab-btn active" data-tab="login">ログイン</button>
+    <button type="button" class="tab-btn" data-tab="register">新規会員登録</button>
+  </div>
+
+  <!-- ログインフォーム -->
+  <form id="loginForm" class="auth-form">
+    <div class="form-row">
+      <label for="loginEmail">メールアドレス</label>
+      <input type="email" id="loginEmail" required>
+    </div>
+    <div class="form-row password-row">
+      <label for="loginPassword">パスワード</label>
+      <input type="password" id="loginPassword" required>
+      <button type="button" class="toggle-pw" data-target="loginPassword">表示</button>
+    </div>
+    <button type="submit">ログイン</button>
+    <p class="form-message" id="loginMessage"></p>
+  </form>
+
+  <!-- 新規会員登録フォーム -->
+  <form id="registerForm" class="auth-form" style="display:none;">
+    <div class="form-row">
+      <label for="registerEmail">メールアドレス</label>
+      <input type="email" id="registerEmail" required>
+    </div>
+    <div class="form-row">
+      <label for="registerNickname">ニックネーム（サイト上の表示名）</label>
+      <input type="text" id="registerNickname" maxlength="30" required>
+    </div>
+    <div class="form-row terms-box">
+      <p><strong>注意事項・免責事項</strong></p>
+      <div class="terms-text">
+        ・登録した内容の正確性は保証されません。<br>
+        ・登録された情報は、掲示板運営の目的以外には使用しません。<br>
+        ・不適切な投稿が確認された場合、登録を削除する場合があります。
+        <!-- 実際の規約に合わせて書き換えてください -->
+      </div>
+      <label class="terms-agree">
+        <input type="checkbox" id="registerAgree" required>
+        上記の注意事項・免責事項に同意します
+      </label>
+    </div>
+    <button type="submit">登録する（仮パスワードをメールで受け取る）</button>
+    <p class="form-message" id="registerMessage"></p>
+  </form>
+
+  <!-- 初回ログイン時の強制パスワード変更 -->
+  <form id="forceChangeForm" class="auth-form" style="display:none;">
+    <p>初回ログインのため、パスワードの変更が必要です。</p>
+    <div class="form-row password-row">
+      <label for="forceCurrentPassword">現在の仮パスワード</label>
+      <input type="password" id="forceCurrentPassword" required>
+      <button type="button" class="toggle-pw" data-target="forceCurrentPassword">表示</button>
+    </div>
+    <div class="form-row password-row">
+      <label for="forceNewPassword">新しいパスワード（8文字以上）</label>
+      <input type="password" id="forceNewPassword" minlength="8" required>
+      <button type="button" class="toggle-pw" data-target="forceNewPassword">表示</button>
+    </div>
+    <button type="submit">パスワードを変更する</button>
+    <p class="form-message" id="forceChangeMessage"></p>
+  </form>
+
+  <!-- マイページ -->
+  <div id="myPage" style="display:none;">
+    <h3>あなたの掲示板</h3>
+    <div class="board-url-box">
+      <p>このURLをチームのメンバーに共有してください。ログインなしで予定を見てもらえます。</p>
+      <div class="board-url-row">
+        <input type="text" id="boardUrl" readonly>
+        <button type="button" id="copyBoardUrlBtn">コピー</button>
+      </div>
+      <p class="form-message" id="copyMessage"></p>
+    </div>
+
+    <h3>プロフィール</h3>
+    <form id="profileForm" class="auth-form">
+      <div class="form-row">
+        <label for="myNickname">ニックネーム</label>
+        <input type="text" id="myNickname" maxlength="30" required>
+      </div>
+      <div class="form-row">
+        <label for="myTeamName">掲示板名（チームメンバーに表示される名前）</label>
+        <input type="text" id="myTeamName" maxlength="40" placeholder="例: ○○サークル△△チーム">
+      </div>
+      <button type="submit">プロフィールを変更</button>
+      <p class="form-message" id="profileMessage"></p>
+    </form>
+
+    <h3>パスワード変更</h3>
+    <form id="changePasswordForm" class="auth-form">
+      <div class="form-row password-row">
+        <label for="myCurrentPassword">現在のパスワード</label>
+        <input type="password" id="myCurrentPassword" required>
+        <button type="button" class="toggle-pw" data-target="myCurrentPassword">表示</button>
+      </div>
+      <div class="form-row password-row">
+        <label for="myNewPassword">新しいパスワード（8文字以上）</label>
+        <input type="password" id="myNewPassword" minlength="8" required>
+        <button type="button" class="toggle-pw" data-target="myNewPassword">表示</button>
+      </div>
+      <button type="submit">パスワードを変更</button>
+      <p class="form-message" id="myPasswordMessage"></p>
+    </form>
+  </div>
+
+</div>
+</main>
+
+<footer class="site-footer">
+  地域交流イベント 連絡掲示板
+</footer>
+
+<style>
+  .account-app { max-width: 480px; margin: 0 auto; }
+  .logged-in-bar { background: #eef6ee; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; }
+  .logged-in-bar button { margin-left: 12px; }
+  .auth-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab-btn { padding: 8px 16px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; border-radius: 4px; }
+  .tab-btn.active { background: #333; color: #fff; border-color: #333; }
+  .auth-form .form-row { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
+  .auth-form label { font-weight: bold; }
+  .auth-form input[type="email"], .auth-form input[type="text"], .auth-form input[type="password"] {
+    padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px;
+  }
+  .password-row { position: relative; }
+  .toggle-pw { align-self: flex-start; padding: 4px 10px; font-size: 0.85rem; cursor: pointer; }
+  .terms-box { border: 1px solid #ddd; padding: 12px; border-radius: 4px; background: #fafafa; }
+  .terms-text { font-size: 0.9rem; color: #444; margin: 8px 0; line-height: 1.6; }
+  .terms-agree { font-weight: normal !important; display: flex; align-items: center; gap: 6px; }
+  .auth-form button[type="submit"] { padding: 10px 20px; font-size: 1rem; cursor: pointer; }
+  .form-message { margin-top: 8px; font-weight: bold; }
+  #myPage h3 { margin-top: 24px; }
+  .board-url-box { border: 1px solid #ddd; border-radius: 6px; padding: 12px; background: #fafafa; }
+  .board-url-row { display: flex; gap: 8px; }
+  .board-url-row input { flex: 1; padding: 8px; font-size: 0.9rem; border: 1px solid #ccc; border-radius: 4px; }
+  .board-url-row button { padding: 8px 16px; cursor: pointer; }
+</style>
+
+<script src="assets/config.js"></script>
+<script>
+(function () {
+
+  function callApi(payload) {
+    return fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function (res) { return res.json(); });
+  }
+
+  function getSession() {
+    return {
+      token: localStorage.getItem('circleSessionToken'),
+      nickname: localStorage.getItem('circleNickname'),
+      boardId: localStorage.getItem('circleBoardId'),
+      teamName: localStorage.getItem('circleTeamName')
+    };
+  }
+  function setSession(token, nickname, boardId, teamName) {
+    localStorage.setItem('circleSessionToken', token);
+    localStorage.setItem('circleNickname', nickname);
+    if (boardId) localStorage.setItem('circleBoardId', boardId);
+    if (teamName !== undefined) localStorage.setItem('circleTeamName', teamName || '');
+  }
+  function clearSession() {
+    localStorage.removeItem('circleSessionToken');
+    localStorage.removeItem('circleNickname');
+    localStorage.removeItem('circleBoardId');
+    localStorage.removeItem('circleTeamName');
+  }
+
+  function showLoggedOutView() {
+    document.getElementById('loggedInBar').style.display = 'none';
+    document.getElementById('authTabs').style.display = 'flex';
+    document.getElementById('forceChangeForm').style.display = 'none';
+    document.getElementById('myPage').style.display = 'none';
+    switchTab('login');
+  }
+  function showForceChangeView() {
+    document.getElementById('authTabs').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('forceChangeForm').style.display = 'block';
+    document.getElementById('myPage').style.display = 'none';
+  }
+  function showLoggedInView(nickname, boardId, teamName) {
+    document.getElementById('loggedInBar').style.display = 'block';
+    document.getElementById('loggedInNickname').textContent = nickname;
+    document.getElementById('authTabs').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('forceChangeForm').style.display = 'none';
+    document.getElementById('myPage').style.display = 'block';
+    document.getElementById('myNickname').value = nickname;
+    document.getElementById('myTeamName').value = teamName || '';
+    document.getElementById('boardUrl').value = SITE_BOARD_HTML_URL + '?board=' + boardId;
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+  }
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { switchTab(btn.dataset.tab); });
+  });
+
+  document.querySelectorAll('.toggle-pw').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const input = document.getElementById(btn.dataset.target);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.textContent = isHidden ? '非表示' : '表示';
+    });
+  });
+
+  // ---- 初期表示 ----
+  const session = getSession();
+  if (session.token) {
+    showLoggedInView(session.nickname, session.boardId, session.teamName);
+  } else {
+    showLoggedOutView();
+  }
+
+  // ---- 会員登録 ----
+  document.getElementById('registerForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    const msg = document.getElementById('registerMessage');
+    msg.textContent = '送信中...';
+    callApi({
+      action: 'register',
+      email: document.getElementById('registerEmail').value,
+      nickname: document.getElementById('registerNickname').value,
+      agreedTerms: document.getElementById('registerAgree').checked
+    }).then(function (result) {
+      if (result.success) {
+        msg.textContent = result.message || '登録しました。メールをご確認ください。';
+        ev.target.reset();
+      } else {
+        msg.textContent = 'エラー: ' + result.error;
+      }
+    }).catch(function () { msg.textContent = '通信エラーが発生しました。'; });
+  });
+
+  // ---- ログイン ----
+  document.getElementById('loginForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    const msg = document.getElementById('loginMessage');
+    msg.textContent = 'ログイン中...';
+    callApi({
+      action: 'login',
+      email: document.getElementById('loginEmail').value,
+      password: document.getElementById('loginPassword').value
+    }).then(function (result) {
+      if (result.success) {
+        setSession(result.sessionToken, result.nickname, result.boardId, result.teamName);
+        msg.textContent = '';
+        if (result.mustChangePassword) {
+          showForceChangeView();
+        } else {
+          showLoggedInView(result.nickname, result.boardId, result.teamName);
+        }
+      } else {
+        msg.textContent = 'エラー: ' + result.error;
+      }
+    }).catch(function () { msg.textContent = '通信エラーが発生しました。'; });
+  });
+
+  // ---- 初回ログイン時の強制パスワード変更 ----
+  document.getElementById('forceChangeForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    const msg = document.getElementById('forceChangeMessage');
+    const s = getSession();
+    msg.textContent = '変更中...';
+    callApi({
+      action: 'changePassword',
+      sessionToken: s.token,
+      currentPassword: document.getElementById('forceCurrentPassword').value,
+      newPassword: document.getElementById('forceNewPassword').value
+    }).then(function (result) {
+      if (result.success) {
+        ev.target.reset();
+        showLoggedInView(s.nickname, s.boardId, s.teamName);
+      } else {
+        msg.textContent = 'エラー: ' + result.error;
+      }
+    }).catch(function () { msg.textContent = '通信エラーが発生しました。'; });
+  });
+
+  // ---- プロフィール変更（ニックネーム・掲示板名） ----
+  document.getElementById('profileForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    const msg = document.getElementById('profileMessage');
+    const s = getSession();
+    msg.textContent = '変更中...';
+    callApi({
+      action: 'updateProfile',
+      sessionToken: s.token,
+      nickname: document.getElementById('myNickname').value,
+      teamName: document.getElementById('myTeamName').value
+    }).then(function (result) {
+      if (result.success) {
+        setSession(s.token, result.nickname, s.boardId, result.teamName);
+        document.getElementById('loggedInNickname').textContent = result.nickname;
+        msg.textContent = '変更しました。';
+      } else {
+        msg.textContent = 'エラー: ' + result.error;
+      }
+    }).catch(function () { msg.textContent = '通信エラーが発生しました。'; });
+  });
+
+  // ---- パスワード変更（マイページ） ----
+  document.getElementById('changePasswordForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    const msg = document.getElementById('myPasswordMessage');
+    const s = getSession();
+    msg.textContent = '変更中...';
+    callApi({
+      action: 'changePassword',
+      sessionToken: s.token,
+      currentPassword: document.getElementById('myCurrentPassword').value,
+      newPassword: document.getElementById('myNewPassword').value
+    }).then(function (result) {
+      if (result.success) {
+        msg.textContent = '変更しました。';
+        ev.target.reset();
+      } else {
+        msg.textContent = 'エラー: ' + result.error;
+      }
+    }).catch(function () { msg.textContent = '通信エラーが発生しました。'; });
+  });
+
+  // ---- 掲示板URLをコピー ----
+  document.getElementById('copyBoardUrlBtn').addEventListener('click', function () {
+    const input = document.getElementById('boardUrl');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(function () {
+      document.getElementById('copyMessage').textContent = 'コピーしました。';
+    }).catch(function () {
+      document.getElementById('copyMessage').textContent = 'コピーできませんでした。手動で選択してコピーしてください。';
+    });
+  });
+
+  // ---- ログアウト ----
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    const s = getSession();
+    callApi({ action: 'logout', sessionToken: s.token }).finally(function () {
+      clearSession();
+      showLoggedOutView();
+    });
+  });
+})();
+</script>
+</body>
+</html>

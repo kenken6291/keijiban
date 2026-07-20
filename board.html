@@ -1,0 +1,101 @@
+<!--
+  掲示板 閲覧ページ（ログイン不要）
+  ・このファイルをそのまま board.html としてウェブサイトのルート（boards.jsonと同じ階層）に配置してください。
+  ・登録者が「?board=XXXXXXXX」のようにIDを付けたURLをチームに共有すると、
+    そのチームの投稿だけがログインなしで表示されます。
+    例: https://kenken6291.github.io/xxx/board.html?board=AB12CD34
+  ・URLはマイページ（account.html）に登録者本人向けに表示されます。
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>チーム掲示板 | 地域交流イベント</title>
+<style>
+  body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 16px; color: #222; }
+  h1 { font-size: 1.4rem; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  .updated-at { color: #777; font-size: 0.85rem; margin-bottom: 20px; }
+  .event-card {
+    border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: #fff;
+  }
+  .event-date { font-weight: bold; font-size: 1.05rem; }
+  .event-detail { color: #444; margin-top: 4px; line-height: 1.5; }
+  .event-note { color: #777; font-size: 0.9rem; margin-top: 4px; }
+  .empty, .error { color: #777; padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1 id="boardTitle">チーム掲示板</h1>
+<p class="updated-at" id="updatedAt"></p>
+<div id="eventList"></div>
+
+<script>
+(function () {
+  // boards.json が置かれている場所（同じディレクトリなら 'boards.json' のままでOK）
+  const BOARDS_JSON_URL = 'boards.json';
+
+  const params = new URLSearchParams(window.location.search);
+  const boardId = params.get('board');
+  const listEl = document.getElementById('eventList');
+  const titleEl = document.getElementById('boardTitle');
+  const updatedAtEl = document.getElementById('updatedAt');
+
+  if (!boardId) {
+    listEl.innerHTML = '<p class="error">掲示板IDが指定されていません。共有されたURLを確認してください。</p>';
+    return;
+  }
+
+  fetch(BOARDS_JSON_URL, { cache: 'no-store' })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      const board = data.boards ? data.boards[boardId] : null;
+      if (!board) {
+        listEl.innerHTML = '<p class="error">指定された掲示板が見つかりませんでした。</p>';
+        return;
+      }
+
+      titleEl.textContent = board.teamName || 'チーム掲示板';
+      if (data.updatedAt) {
+        const d = new Date(data.updatedAt);
+        updatedAtEl.textContent = '最終更新: ' + d.toLocaleString('ja-JP');
+      }
+
+      if (!board.events || board.events.length === 0) {
+        listEl.innerHTML = '<p class="empty">現在、公開中の予定はありません。</p>';
+        return;
+      }
+
+      board.events.forEach(function (ev) {
+        const card = document.createElement('div');
+        card.className = 'event-card';
+
+        const dateEl = document.createElement('div');
+        dateEl.className = 'event-date';
+        dateEl.textContent = ev.date + '（' + ev.content + '）';
+
+        const detailEl = document.createElement('div');
+        detailEl.className = 'event-detail';
+        detailEl.textContent = ev.time + ' ／ ' + ev.place;
+
+        card.appendChild(dateEl);
+        card.appendChild(detailEl);
+
+        if (ev.note) {
+          const noteEl = document.createElement('div');
+          noteEl.className = 'event-note';
+          noteEl.textContent = '備考: ' + ev.note;
+          card.appendChild(noteEl);
+        }
+
+        listEl.appendChild(card);
+      });
+    })
+    .catch(function () {
+      listEl.innerHTML = '<p class="error">データの読み込みに失敗しました。時間をおいて再度お試しください。</p>';
+    });
+})();
+</script>
+</body>
+</html>

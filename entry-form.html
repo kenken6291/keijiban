@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>予定を登録する | 地域交流イベント</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="site-title" href="index.html">地域交流イベント</a>
+  <nav class="site-nav">
+    <a href="index.html">ホーム</a>
+    <a href="account.html">会員登録・ログイン</a>
+    <a href="entry-form.html">予定を登録する</a>
+  </nav>
+</header>
+
+<main>
+<div id="scheduleApp" class="schedule-entry">
+
+  <div id="notLoggedInNotice" style="display:none;">
+    <p>予定を登録するには、まずログインしてください。</p>
+  </div>
+
+  <div id="scheduleLoggedInArea" style="display:none;">
+    <h2 id="formTitle">スケジュール登録</h2>
+
+    <form id="scheduleForm">
+      <input type="hidden" id="entryId" value="">
+      <div class="form-row">
+        <label for="entryDate">日付</label>
+        <input type="date" id="entryDate" name="date" required>
+      </div>
+      <div class="form-row">
+        <label for="entryTime">時間</label>
+        <input type="text" id="entryTime" name="time" placeholder="例: 13:00〜15:00" required>
+      </div>
+      <div class="form-row">
+        <label for="entryPlace">場所</label>
+        <input type="text" id="entryPlace" name="place" placeholder="例: ○○体育館" required>
+      </div>
+      <div class="form-row">
+        <label for="entryContent">内容</label>
+        <select id="entryContent" name="content" required>
+          <option value="">選択してください</option>
+          <option value="通常練習">通常練習</option>
+          <option value="練習試合">練習試合</option>
+          <option value="総会">総会</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="entryNote">備考（任意）</label>
+        <textarea id="entryNote" name="note" rows="3" placeholder="例: 雨天中止、対戦相手など"></textarea>
+      </div>
+
+      <button type="submit" id="submitBtn">登録する</button>
+      <button type="button" id="cancelEditBtn" style="display:none;">編集をキャンセル</button>
+      <p id="formMessage" role="status"></p>
+    </form>
+
+    <h3>自分が登録した予定</h3>
+    <ul id="myEntriesList" class="my-entries-list"></ul>
+  </div>
+</div>
+</main>
+
+<footer class="site-footer">
+  地域交流イベント 連絡掲示板
+</footer>
+
+<style>
+  .schedule-entry { max-width: 480px; margin: 0 auto; }
+  .schedule-entry .form-row { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
+  .schedule-entry label { font-weight: bold; }
+  .schedule-entry input, .schedule-entry select, .schedule-entry textarea {
+    padding: 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px;
+  }
+  .schedule-entry button { padding: 10px 20px; font-size: 1rem; cursor: pointer; margin-right: 8px; }
+  .schedule-entry button:disabled { opacity: 0.6; cursor: not-allowed; }
+  #formMessage { margin-top: 8px; font-weight: bold; }
+  .my-entries-list { list-style: none; padding: 0; }
+  .my-entries-list li {
+    border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .my-entries-list .entry-actions button { padding: 4px 10px; font-size: 0.85rem; }
+</style>
+
+<script src="assets/config.js"></script>
+<script>
+(function () {
+
+  function callApi(payload) {
+    return fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function (res) { return res.json(); });
+  }
+
+  function getSessionToken() {
+    return localStorage.getItem('circleSessionToken');
+  }
+
+  const form = document.getElementById('scheduleForm');
+  const messageEl = document.getElementById('formMessage');
+  const submitBtn = document.getElementById('submitBtn');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const formTitle = document.getElementById('formTitle');
+  const entryIdField = document.getElementById('entryId');
+
+  function resetFormToCreateMode() {
+    form.reset();
+    entryIdField.value = '';
+    formTitle.textContent = 'スケジュール登録';
+    submitBtn.textContent = '登録する';
+    cancelEditBtn.style.display = 'none';
+  }
+
+  function loadMyEntries() {
+    const token = getSessionToken();
+    if (!token) return;
+    callApi({ action: 'myEntries', sessionToken: token }).then(function (result) {
+      const list = document.getElementById('myEntriesList');
+      list.innerHTML = '';
+      if (!result.success) {
+        return;
+      }
+      if (result.entries.length === 0) {
+        list.innerHTML = '<li>まだ予定を登録していません。</li>';
+        return;
+      }
+      result.entries.forEach(function (entry) {
+        const li = document.createElement('li');
+        const info = document.createElement('span');
+        info.textContent = entry.date + ' ' + entry.time + ' ' + entry.place + ' / ' + entry.content;
+
+        const actions = document.createElement('span');
+        actions.className = 'entry-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.textContent = '編集';
+        editBtn.addEventListener('click', function () { startEdit_(entry); });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.textContent = '削除';
+        deleteBtn.addEventListener('click', function () { deleteEntry_(entry.entryId); });
+
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+        li.appendChild(info);
+        li.appendChild(actions);
+        list.appendChild(li);
+      });
+    });
+  }
+
+  function startEdit_(entry) {
+    entryIdField.value = entry.entryId;
+    // <input type="date"> は YYYY-MM-DD 形式が必要なため変換する
+    document.getElementById('entryDate').value = entry.date.replace(/\//g, '-');
+    document.getElementById('entryTime').value = entry.time;
+    document.getElementById('entryPlace').value = entry.place;
+    document.getElementById('entryContent').value = entry.content;
+    document.getElementById('entryNote').value = entry.note;
+
+    formTitle.textContent = '予定を編集';
+    submitBtn.textContent = '更新する';
+    cancelEditBtn.style.display = 'inline-block';
+    messageEl.textContent = '';
+    window.scrollTo({ top: form.offsetTop - 20, behavior: 'smooth' });
+  }
+
+  function deleteEntry_(entryId) {
+    if (!confirm('この予定を削除します。よろしいですか？')) return;
+    const token = getSessionToken();
+    callApi({ action: 'deleteEntry', sessionToken: token, entryId: entryId }).then(function (result) {
+      if (result.success) {
+        loadMyEntries();
+        if (entryIdField.value === entryId) resetFormToCreateMode();
+      } else {
+        alert('エラー: ' + result.error);
+      }
+    });
+  }
+
+  cancelEditBtn.addEventListener('click', resetFormToCreateMode);
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    const token = getSessionToken();
+    if (!token) {
+      messageEl.textContent = 'ログインが必要です。';
+      return;
+    }
+
+    const isEdit = !!entryIdField.value;
+    const payload = {
+      action: isEdit ? 'updateEntry' : 'createEntry',
+      sessionToken: token,
+      date: document.getElementById('entryDate').value,
+      time: document.getElementById('entryTime').value,
+      place: document.getElementById('entryPlace').value,
+      content: document.getElementById('entryContent').value,
+      note: document.getElementById('entryNote').value
+    };
+    if (isEdit) payload.entryId = entryIdField.value;
+
+    submitBtn.disabled = true;
+    messageEl.textContent = isEdit ? '更新中...' : '登録中...';
+
+    callApi(payload).then(function (result) {
+      if (result.success) {
+        messageEl.textContent = isEdit ? '更新しました。' : '登録しました。反映まで少し時間がかかる場合があります。';
+        resetFormToCreateMode();
+        loadMyEntries();
+      } else {
+        messageEl.textContent = 'エラー: ' + result.error;
+      }
+    }).catch(function () {
+      messageEl.textContent = '通信エラーが発生しました。時間をおいて再度お試しください。';
+    }).finally(function () {
+      submitBtn.disabled = false;
+    });
+  });
+
+  // ---- 初期表示：ログイン状態に応じて表示を切り替え ----
+  const token = getSessionToken();
+  if (token) {
+    document.getElementById('scheduleLoggedInArea').style.display = 'block';
+    loadMyEntries();
+  } else {
+    document.getElementById('notLoggedInNotice').style.display = 'block';
+  }
+})();
+</body>
+</html>
