@@ -5,5 +5,5 @@
  * ・SITE_BOARD_HTML_URL は、このサイトの board.html の実際のURLです。
  *   https://kenken6291.github.io/keijiban/ で公開する前提で、あらかじめ設定済みです。
  */
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/【ここにデプロイIDを貼り付け】/exec';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxssYGS4Pu-Jjz3bDPdoRvWwqstrZ-4wwU4nTJJdUzGXZcJ3CEZThLK00OXylT8lbGU/exec';
 const SITE_BOARD_HTML_URL = 'https://kenken6291.github.io/keijiban/board.html';
